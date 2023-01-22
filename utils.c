@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <ncurses.h>
 #include "utils.h"
 
 char* setMonthInfo(int year, int month, int* monthDays) {
