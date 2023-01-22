@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include "utils.h"
+#include "appt.h"
 
 int main() {
 	initscr(); // Start of ncurses
@@ -35,18 +36,21 @@ int main() {
 	getmaxyx(stdscr, maxY, maxX);
 
 	// ncurses stuff
-	WINDOW* win = newwin(13, 28, (maxY / 2) - 6, (maxX / 2) - 14); // Generating a window to display things in
+	WINDOW* monthWin = newwin(13, 28, 0, 0); // Generating a window to display month info
+	WINDOW* apptWin = newwin(20, 50, 0, 29); // Generating a window to display appointment stuff in
 	noecho(); // Won't echo the user inputs to the screen
 	start_color(); // Enables color
 	refresh(); // Actually load in the changes so we can print to the window and stuff
-	box(win, 0, 0); // draw a box around the window
-	wrefresh(win); // refresh to show the box
+	box(monthWin, 0, 0); // draw a box around the window
+	box(apptWin, 0, 0);
+	wrefresh(monthWin); // refresh to show the box
+	wrefresh(apptWin);
 	
-	getmaxyx(win, maxY, maxX); // assigns maxY and maxX the limits of the window height and width
+	getmaxyx(monthWin, maxY, maxX); // assigns maxY and maxX the limits of the window height and width
 
 	// Printing the month
-	mvwprintw(win, 1, 8, "%s %d", currentMonth, year + 1900);
-	mvwprintw(win, 2, 4, "S  M  T  W  T  F  S");
+	mvwprintw(monthWin, 1, 8, "%s %d", currentMonth, year + 1900);
+	mvwprintw(monthWin, 2, 4, "S  M  T  W  T  F  S");
 	move(cursorY, cursorX);
 	while(true) {
 		columnPrinted = 1;
@@ -58,21 +62,21 @@ int main() {
 	
 			// reverse the colors for the current day
 			if (i + 1 == mday) {
-				wattron(win, A_BOLD);
+				wattron(monthWin, A_BOLD);
 			}
 	
 			// Printing out the calendar for the month
 			if(highlightX == (i - firstDate->tm_wday) % 7 && highlightY == columnPrinted) {
-				wattron(win, A_REVERSE);
-				mvwprintw(win, cursorY, cursorX, "%d", i + 1);
-				wattroff(win, A_REVERSE);
+				wattron(monthWin, A_REVERSE);
+				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
+				wattroff(monthWin, A_REVERSE);
 			} else {
-				mvwprintw(win, cursorY, cursorX, "%d", i + 1);
+				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
 			}
 	
 			// Ending reverse colors if the day printed is the current day
 			if (i + 1 == mday) {
-				wattroff(win, A_BOLD);
+				wattroff(monthWin, A_BOLD);
 			}
 	
 			// Some proper Spacing
@@ -83,39 +87,47 @@ int main() {
 				columnPrinted++;
 				cursorY += 2;
 				cursorX = 4;
-				wmove(win, cursorY, cursorX);
+				wmove(monthWin, cursorY, cursorX);
 			}
 		}
 	
 		// Cursor movement
-		keyPress = wgetch(win);
+		keyPress = wgetch(monthWin);
 		if(keyPress == 'h') {
 			cursorX = 4;
 			cursorY = 3;
 			highlightX -= 1;
-			wrefresh(win);
+			wrefresh(monthWin);
 			refresh();
 		}
 		if(keyPress == 'l') {
 			cursorX = 4;
 			cursorY = 3;
 			highlightX += 1;
-			wrefresh(win);
+			wrefresh(monthWin);
 			refresh();
 		}
 		if(keyPress == 'j') {
 			cursorX = 4;
 			cursorY = 3;
 			highlightY += 1;
-			wrefresh(win);
+			wrefresh(monthWin);
 			refresh();
 		}
 		if(keyPress == 'k') {
 			cursorX = 4;
 			cursorY = 3;
 			highlightY -= 1;
-			wrefresh(win);
+			wrefresh(monthWin);
 			refresh();
+		}
+
+		// Making Appointments
+		if(keyPress == 'i') {
+			promptAppointment(&apptWin);
+			wmove(monthWin, 3, 4);
+			cursorX = 4;
+			cursorY = 3;
 		}
 	
 		// End ncurses when hitting 'q'
@@ -137,7 +149,7 @@ int main() {
 		}
 
 		refresh();
-		wrefresh(win);
+		wrefresh(monthWin);
 	}
 
 	endwin();
