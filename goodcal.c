@@ -27,6 +27,8 @@ int main() {
 	int highlightX = 0;
 	int highlightY = 1;
 	int columnPrinted = 1;
+	// char* apptDest = getenv("HOME");
+	// strcat(apptDest, "/.cache/goodcal/apptList");
 
 	// Setting the proper info for based on the date data
 	char* currentMonth = setMonthInfo(year + 1900, month, &monthDays);
@@ -43,16 +45,21 @@ int main() {
 	refresh(); // Actually load in the changes so we can print to the window and stuff
 	box(monthWin, 0, 0); // draw a box around the window
 	box(apptWin, 0, 0);
+
 	wrefresh(monthWin); // refresh to show the box
 	wrefresh(apptWin);
 	
 	getmaxyx(monthWin, maxY, maxX); // assigns maxY and maxX the limits of the window height and width
+
+	// Printing the appointments currently logged
+	printAppointments(&apptWin);
 
 	// Printing the month
 	mvwprintw(monthWin, 1, 8, "%s %d", currentMonth, year + 1900);
 	mvwprintw(monthWin, 2, 4, "S  M  T  W  T  F  S");
 	move(cursorY, cursorX);
 	while(true) {
+		wmove(monthWin, cursorY, cursorX);
 		columnPrinted = 1;
 		for(int i = 0; i < monthDays; i++) {
 			// Some extra space for if the 1st day of the month isn't on a Sunday
@@ -128,6 +135,7 @@ int main() {
 			wmove(monthWin, 3, 4);
 			cursorX = 4;
 			cursorY = 3;
+			printAppointments(&apptWin);
 		}
 	
 		// End ncurses when hitting 'q'
