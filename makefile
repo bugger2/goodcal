@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-lncurses -O2
+CFLAGS=-lncurses -g #-O2
 
 goodcal: goodcal.o utils.o appt.o
 	$(CC) $(CFLAGS) $^ -o $@

@@ -49,3 +49,33 @@ char* setMonthInfo(int year, int month, int* monthDays) {
 
 	return monthName;
 }
+
+void sort(int array[], int size, int orderArray[]) {
+	for(int i = 0; i < size - 1; i++) {
+		for(int j = 0; j < size - i - 1; j++) {
+			if(array[j] > array[j + 1]) {
+				int temp = array[j];
+				int orderTemp = orderArray[j];
+				array[j] = array[j + 1];
+				orderArray[j] = orderArray[j + 1];
+				array[j + 1] = temp;
+				orderArray[j + 1] = orderTemp;
+			}
+		}
+	}
+}
+
+void moveForSunday(int daysToMove, int* cursorX) {
+	for(int i = 0; i < daysToMove; i++) {
+		*cursorX += 3;
+	}
+}
+
+void refreshCal(int daysToMove, int* cursorX, int* cursorY, int* highlight, WINDOW** win, int multiplier) {
+	*cursorX = 4;
+	*cursorY = 3;
+	*highlight += (1 * multiplier);
+	moveForSunday(daysToMove, cursorX);
+	wrefresh(*win);
+	refresh();
+}

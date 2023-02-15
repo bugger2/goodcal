@@ -3,7 +3,6 @@
 #include <time.h>
 #include <ncurses.h>
 #include <string.h>
-#include <sys/ioctl.h>
 #include "utils.h"
 #include "appt.h"
 
@@ -24,7 +23,7 @@ int main() {
 	int monthDays, keyPress, maxX, maxY;
 	int cursorX = 4;
 	int cursorY = 3;
-	int highlightX = 0;
+	int highlightX = 7;
 	int highlightY = 1;
 	int columnPrinted = 1;
 	// char* apptDest = getenv("HOME");
@@ -32,10 +31,6 @@ int main() {
 
 	// Setting the proper info for based on the date data
 	char* currentMonth = setMonthInfo(year + 1900, month, &monthDays);
-	
-	
-	// Preparing to draw
-	getmaxyx(stdscr, maxY, maxX);
 
 	// ncurses stuff
 	WINDOW* monthWin = newwin(13, 28, 0, 0); // Generating a window to display month info
@@ -57,26 +52,27 @@ int main() {
 	// Printing the month
 	mvwprintw(monthWin, 1, 8, "%s %d", currentMonth, year + 1900);
 	mvwprintw(monthWin, 2, 4, "S  M  T  W  T  F  S");
-	move(cursorY, cursorX);
+	wmove(monthWin, cursorY, cursorX);
+	moveForSunday(firstDate->tm_wday, &cursorX); // Some extra space for if the 1st day of the month isn't on a Sunday
 	while(true) {
 		wmove(monthWin, cursorY, cursorX);
 		columnPrinted = 1;
 		for(int i = 0; i < monthDays; i++) {
-			// Some extra space for if the 1st day of the month isn't on a Sunday
-			for(int j = 0; j < firstDate->tm_wday; j++) {
-				cursorX += 3;
-			}
 	
-			// reverse the colors for the current day
+			// Make the current day standout
 			if (i + 1 == mday) {
 				wattron(monthWin, A_BOLD);
 			}
 	
 			// Printing out the calendar for the month
-			if(highlightX == (i - firstDate->tm_wday) % 7 && highlightY == columnPrinted) {
+			if((highlightX == (i - firstDate->tm_wday) % 7 /*|| highlightX == (i - firstDate->tm_wday)*/) && highlightY == columnPrinted) {
 				wattron(monthWin, A_REVERSE);
 				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
 				wattroff(monthWin, A_REVERSE);
+			/*} else if(highlightX == 7 && highlightY == columnPrinted) {
+				wattron(monthWin, A_REVERSE);
+				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
+				wattroff(monthWin, A_REVERSE);*/
 			} else {
 				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
 			}
@@ -101,53 +97,32 @@ int main() {
 		// Cursor movement
 		keyPress = wgetch(monthWin);
 		if(keyPress == 'h') {
-			cursorX = 4;
-			cursorY = 3;
-			highlightX -= 1;
-			wrefresh(monthWin);
-			refresh();
-		}
-		if(keyPress == 'l') {
-			cursorX = 4;
-			cursorY = 3;
-			highlightX += 1;
-			wrefresh(monthWin);
-			refresh();
-		}
-		if(keyPress == 'j') {
-			cursorX = 4;
-			cursorY = 3;
-			highlightY += 1;
-			wrefresh(monthWin);
-			refresh();
-		}
-		if(keyPress == 'k') {
-			cursorX = 4;
-			cursorY = 3;
-			highlightY -= 1;
-			wrefresh(monthWin);
-			refresh();
-		}
-
-		// Making Appointments
-		if(keyPress == 'i') {
-			promptAppointment(&apptWin);
+			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightX, &monthWin, -1);
+		} else if(keyPress == 'l') {
+			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightX, &monthWin, 1);
+		} else if(keyPress == 'j') {
+			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightY, &monthWin, 1);
+		} else if(keyPress == 'k') {
+			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightY, &monthWin, -1);
+		} else if(keyPress == 'i') { // Making Appointments
+			promptAppointment(&apptWin, currentMonth, highlightX + ((highlightY - 1) * 7) - firstDate->tm_wday + 1, year + 1900, month);
 			wmove(monthWin, 3, 4);
 			cursorX = 4;
 			cursorY = 3;
 			printAppointments(&apptWin);
-		}
-	
-		// End ncurses when hitting 'q'
-		if(keyPress == 'q') {
+		} else if(keyPress == 'q') { // End ncurses when hitting 'q'
 			break;
+		} else {
+			wmove(monthWin, 3, 4);
+			cursorY = 3;
+			cursorX = 4;
 		}
 
 		// Don't let the cursor go off screen
-		if(highlightX == 7) {
-			highlightX = 6;
-		} else if(highlightX == -1) {
-			highlightX = 0;
+		if(highlightX == 8) {
+			highlightX = 7;
+		} else if(highlightX == 0) {
+			highlightX = 1;
 		}
 
 		if(highlightY == 6) {
