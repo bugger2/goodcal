@@ -20,12 +20,14 @@ int main() {
 	struct tm* firstDate = localtime(&firstDay);
 	
 	// Regular vars
-	int monthDays, keyPress, maxX, maxY;
-	int cursorX = 4;
-	int cursorY = 3;
-	int highlightX = 7;
-	int highlightY = 1;
-	int columnPrinted = 1;
+	int monthDays, maxX, maxY;
+	// cursor represents where the ncurses cursor is, where the program is drawing
+	// highlight represents where the cursor that the user controls is, the white block you move around
+	int cursorX = 4; // X position for the cursor
+	int cursorY = 3; // Y position for the cursor
+	int highlightX = 4; // X position for the cursor that the user controls
+	int highlightY = 2; // Y position for the cursor that the user controls
+	int rowPrinted = 1; // Tracks how many rows we have printed
 	// char* apptDest = getenv("HOME");
 	// strcat(apptDest, "/.cache/goodcal/apptList");
 
@@ -33,8 +35,8 @@ int main() {
 	char* currentMonth = setMonthInfo(year + 1900, month, &monthDays);
 
 	// ncurses stuff
-	WINDOW* monthWin = newwin(13, 28, 0, 0); // Generating a window to display month info
-	WINDOW* apptWin = newwin(20, 50, 0, 29); // Generating a window to display appointment stuff in
+	WINDOW* monthWin = newwin(15, 28, 0, 0); // The window the calendar will appear in 
+	WINDOW* apptWin = newwin(20, 50, 0, 29); // The window the appointments will appear in
 	noecho(); // Won't echo the user inputs to the screen
 	start_color(); // Enables color
 	refresh(); // Actually load in the changes so we can print to the window and stuff
@@ -47,16 +49,16 @@ int main() {
 	getmaxyx(monthWin, maxY, maxX); // assigns maxY and maxX the limits of the window height and width
 
 	// Printing the appointments currently logged
-	printAppointments(&apptWin);
+	//printAppointments(&apptWin);
 
 	// Printing the month
 	mvwprintw(monthWin, 1, 8, "%s %d", currentMonth, year + 1900);
-	mvwprintw(monthWin, 2, 4, "S  M  T  W  T  F  S");
+	mvwprintw(monthWin, 2, 4, "Su Mo Tu We Th Fr Sa");
 	wmove(monthWin, cursorY, cursorX);
-	moveForSunday(firstDate->tm_wday, &cursorX); // Some extra space for if the 1st day of the month isn't on a Sunday
 	while(true) {
 		wmove(monthWin, cursorY, cursorX);
-		columnPrinted = 1;
+		moveForSunday(firstDate->tm_wday, &cursorX); // Some extra space for if the 1st day of the month isn't on a Sunday
+		rowPrinted = 1;
 		for(int i = 0; i < monthDays; i++) {
 	
 			// Make the current day standout
@@ -65,14 +67,10 @@ int main() {
 			}
 	
 			// Printing out the calendar for the month
-			if((highlightX == (i - firstDate->tm_wday) % 7 /*|| highlightX == (i - firstDate->tm_wday)*/) && highlightY == columnPrinted) {
+			if((highlightX == i % 7 || (highlightX == 7 && i % 7 == 0)) && (highlightY == rowPrinted)) {
 				wattron(monthWin, A_REVERSE);
 				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
 				wattroff(monthWin, A_REVERSE);
-			/*} else if(highlightX == 7 && highlightY == columnPrinted) {
-				wattron(monthWin, A_REVERSE);
-				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
-				wattroff(monthWin, A_REVERSE);*/
 			} else {
 				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
 			}
@@ -86,8 +84,8 @@ int main() {
 			cursorX += 3;
 	
 			// Move down two lines at the end of the week
-			if ((firstDate->tm_wday + i + 1) % 7 == 0 && i >= 1) {
-				columnPrinted++;
+			if (cursorX >= 25) {
+				rowPrinted++;
 				cursorY += 2;
 				cursorX = 4;
 				wmove(monthWin, cursorY, cursorX);
@@ -95,7 +93,7 @@ int main() {
 		}
 	
 		// Cursor movement
-		keyPress = wgetch(monthWin);
+		int keyPress = wgetch(monthWin);
 		if(keyPress == 'h') {
 			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightX, &monthWin, -1);
 		} else if(keyPress == 'l') {
@@ -125,8 +123,8 @@ int main() {
 			highlightX = 1;
 		}
 
-		if(highlightY == 6) {
-			highlightY = 5;
+		if(highlightY == 7) {
+			highlightY = 6;
 		} else if(highlightY == 0) {
 			highlightY = 1;
 		}
