@@ -1,5 +1,6 @@
 ## Bugs
+* Cursor goes off screen if you move to a point that doesnt have a date
 
-* Doesn't highlight the cursor on the first line
+## Features for the future
 
-* Doesn't display multiple appointments properly
+* Display appointments in a side window

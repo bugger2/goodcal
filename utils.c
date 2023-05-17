@@ -75,7 +75,7 @@ void refreshCal(int daysToMove, int* cursorX, int* cursorY, int* highlight, WIND
 	*cursorX = 4;
 	*cursorY = 3;
 	*highlight += (1 * multiplier);
-	moveForSunday(daysToMove, cursorX);
+	moveForSunday(daysToMove - 1, cursorX);
 	wrefresh(*win);
 	refresh();
 }

@@ -60,14 +60,14 @@ int main() {
 		moveForSunday(firstDate->tm_wday, &cursorX); // Some extra space for if the 1st day of the month isn't on a Sunday
 		rowPrinted = 1;
 		for(int i = 0; i < monthDays; i++) {
-	
+
 			// Make the current day standout
 			if (i + 1 == mday) {
 				wattron(monthWin, A_BOLD);
 			}
 	
 			// Printing out the calendar for the month
-			if((highlightX == i % 7 || (highlightX == 7 && i % 7 == 0)) && (highlightY == rowPrinted)) {
+			if((highlightX == i % 7 || (highlightX == 0 - firstDate->tm_wday && (i + firstDate->tm_wday) % 7 == 0)) && (highlightY == rowPrinted)) {
 				wattron(monthWin, A_REVERSE);
 				mvwprintw(monthWin, cursorY, cursorX, "%d", i + 1);
 				wattroff(monthWin, A_REVERSE);
@@ -102,12 +102,12 @@ int main() {
 			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightY, &monthWin, 1);
 		} else if(keyPress == 'k') {
 			refreshCal(firstDate->tm_wday, &cursorX, &cursorY, &highlightY, &monthWin, -1);
-		} else if(keyPress == 'i') { // Making Appointments
-			promptAppointment(&apptWin, currentMonth, highlightX + ((highlightY - 1) * 7) - firstDate->tm_wday + 1, year + 1900, month);
-			wmove(monthWin, 3, 4);
-			cursorX = 4;
-			cursorY = 3;
-			printAppointments(&apptWin);
+			//} else if(keyPress == 'i') { // Making Appointments */
+			//promptAppointment(&apptWin, currentMonth, highlightX + ((highlightY - 1) * 7) - firstDate->tm_wday + 1, year + 1900, month);
+			//wmove(monthWin, 3, 4);
+			//cursorX = 4;
+			//cursorY = 3;
+			//printAppointments(&apptWin);
 		} else if(keyPress == 'q') { // End ncurses when hitting 'q'
 			break;
 		} else {
@@ -117,14 +117,14 @@ int main() {
 		}
 
 		// Don't let the cursor go off screen
-		if(highlightX == 8) {
-			highlightX = 7;
-		} else if(highlightX == 0) {
-			highlightX = 1;
+		if(highlightX == 7 - firstDate->tm_wday) {
+			highlightX = 6 - firstDate->tm_wday;
+		} else if(highlightX == -1 - firstDate->tm_wday) {
+			highlightX = 0 - firstDate->tm_wday;
 		}
 
-		if(highlightY == 7) {
-			highlightY = 6;
+		if(highlightY == 6) {
+			highlightY = 5;
 		} else if(highlightY == 0) {
 			highlightY = 1;
 		}
